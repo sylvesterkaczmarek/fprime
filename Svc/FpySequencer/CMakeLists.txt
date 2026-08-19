@@ -22,6 +22,12 @@ register_fprime_module(
     "${CMAKE_CURRENT_LIST_DIR}/FpySequencer.hpp"
 )
 
+# Keep the default-less DirectiveId switches checked even when F Prime is consumed by a project
+# that does not opt in to the framework validation warning set.
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+  target_compile_options(${FPRIME_CURRENT_MODULE} PRIVATE -Wswitch)
+endif()
+
 ### UTS ###
 register_fprime_ut(
   AUTOCODER_INPUTS
