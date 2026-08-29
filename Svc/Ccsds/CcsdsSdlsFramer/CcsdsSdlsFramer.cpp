@@ -38,14 +38,11 @@ void CcsdsSdlsFramer ::comStatusIn_handler(FwIndexType portNum, Fw::Success& con
 }
 
 void CcsdsSdlsFramer ::dataIn_handler(FwIndexType portNum, Fw::Buffer& data, const ComCfg::FrameContext& context) {
-    // Determine the security association index: use the context's value when set, otherwise the SA_INDEX parameter
-    const U16 unsetSaIndex = static_cast<U16>(ComCfg::SaIndexUnset);
-    U16 saIndex = context.get_saIndex();
-    if (saIndex == unsetSaIndex) {
-        Fw::ParamValid valid = Fw::ParamValid::INVALID;
-        saIndex = this->paramGet_SA_INDEX(valid);
-        FW_ASSERT(FW_PARAM_OK(valid), static_cast<FwAssertArgType>(valid.e));
-    }
+    // The configured downlink security association is authoritative. Context SA values originate
+    // on receive paths and must not silently select a downlink encryption association.
+    Fw::ParamValid valid = Fw::ParamValid::INVALID;
+    const U16 saIndex = this->paramGet_SA_INDEX(valid);
+    FW_ASSERT(FW_PARAM_OK(valid), static_cast<FwAssertArgType>(valid.e));
 
     // Copy context and record the security association index used for encryption
     ComCfg::FrameContext newContext = context;

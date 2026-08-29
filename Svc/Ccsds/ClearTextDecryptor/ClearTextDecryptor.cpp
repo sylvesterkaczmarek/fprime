@@ -26,6 +26,7 @@ void ClearTextDecryptor ::decryptIn_handler(FwIndexType portNum,
                                             U16 securityAssociationIndex,
                                             Fw::Buffer& data,
                                             const ComCfg::FrameContext& context) {
+    this->log_WARNING_HI_NullCipherInUse(securityAssociationIndex);
     this->decryptOut_out(0, Svc::Ccsds::SdlsStatus::SUCCESS, data, context);
 }
 

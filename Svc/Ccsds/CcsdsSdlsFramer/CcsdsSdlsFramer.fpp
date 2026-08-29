@@ -2,14 +2,14 @@ module Svc {
 module Ccsds {
     @ CcsdsSdlsFramer is a passive component supporting the Svc.Framer interface used to frame buffers into
     @ an SDLS frame. This component follows these steps to frame the SDLS frame:
-    @ 1. Determine the security association index from the frame context, falling back to the SA_INDEX parameter
+    @ 1. Determine the security association index from the configured SA_INDEX parameter
     @ 2. Call the SDLS encryption component to encrypt the data
     @ 3. Check the status passed forward with the encrypted data and raise an event if it indicates failure
     @ 4. Allocate a frame buffer and prepend the security association index (16 bits) to the encrypted data
     @ 5. Pass the SDLS frame to the next component in the pipeline
     passive component CcsdsSdlsFramer {
 
-        @ Security association index used when the incoming frame context does not specify one
+        @ Authoritative security association index used for downlink encryption
         param SA_INDEX: U16 default 0
 
         @ Event raised when the encryption helper fails

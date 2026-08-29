@@ -12,6 +12,7 @@ The `Svc::Ccsds::ClearTextDecryptor` component is a pass-through implementation 
 ## Functionality
 
 - Receives an SA index, iv/data buffer, and frame context on the guarded `decryptIn` port; the SA index is ignored.
+- Emits a throttled `NullCipherInUse` WARNING_HI event identifying the SA whenever a frame is accepted without authentication or decryption.
 - Forwards the buffer and context unmodified out `decryptOut` alongside an `SdlsStatus.SUCCESS` status.
 - Passes ownership returns received on `decryptReturnIn` upstream via `bufferReturnOut` (the forwarded buffer is the incoming buffer, as no allocation occurs).
 
@@ -32,6 +33,7 @@ The `Svc::Ccsds::ClearTextDecryptor` component is a pass-through implementation 
 | SVC-CCSDS-CLEARTEXT-DECRYPTOR-002 | The ClearTextDecryptor shall perform no authentication and no decryption, passing the received buffer and context unmodified out `decryptOut`. | Unit Test |
 | SVC-CCSDS-CLEARTEXT-DECRYPTOR-003 | The ClearTextDecryptor shall pass an `SdlsStatus.SUCCESS` status forward for every request. | Unit Test |
 | SVC-CCSDS-CLEARTEXT-DECRYPTOR-004 | Upon receiving ownership of a buffer back on `decryptReturnIn`, the ClearTextDecryptor shall pass it upstream via `bufferReturnOut` for deallocation. | Unit Test |
+| SVC-CCSDS-CLEARTEXT-DECRYPTOR-005 | For each accepted decryption request, the ClearTextDecryptor shall emit a throttled `NullCipherInUse` WARNING_HI event identifying the SA index. | Unit Test |
 
 ## See Also
 

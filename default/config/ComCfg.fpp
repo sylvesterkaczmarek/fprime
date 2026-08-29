@@ -57,7 +57,7 @@ module ComCfg {
         vcId: U8                    @< 6 bit Virtual Channel ID - used for AOS, TC, and TM Protocols
         pvn: Pvn                    @< Packet Version Number - used for AOS deframing to identify packet type
         sendNow: bool               @< Flag to AOS Framer that the Frame this packet goes into should be sent ASAP
-        saIndex: U16                @< Security Association Index - set by SDLS deframers, read by SDLS framers
+        saIndex: U16                @< Security Association Index - set by SDLS deframers; downlink framers overwrite it from configuration
     } default {
         comQueueIndex = 0
         apid = Apid.FW_PACKET_UNKNOWN

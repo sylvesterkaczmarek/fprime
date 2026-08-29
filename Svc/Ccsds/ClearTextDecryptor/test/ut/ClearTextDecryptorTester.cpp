@@ -46,6 +46,9 @@ void ClearTextDecryptorTester ::testDecryptPassThrough() {
 
     this->invoke_to_decryptIn(0, sa, buffer, context);
 
+    ASSERT_EVENTS_SIZE(1);
+    ASSERT_EVENTS_NullCipherInUse_SIZE(1);
+    ASSERT_EVENTS_NullCipherInUse(0, sa);
     ASSERT_from_decryptOut_SIZE(1);
     ASSERT_from_decryptOut(0, Svc::Ccsds::SdlsStatus::SUCCESS, buffer, context);
     ASSERT_from_bufferReturnOut_SIZE(0);

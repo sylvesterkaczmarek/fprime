@@ -95,7 +95,7 @@ class CcsdsSdlsFramerTester : public CcsdsSdlsFramerGTestBase {
     // ----------------------------------------------------------------------
 
     //! Rules for the framing path (dataIn)
-    FW_RBT_DEFINE_RULE(CcsdsSdlsFramerTester, Frame, ContextSa);
+    FW_RBT_DEFINE_RULE(CcsdsSdlsFramerTester, Frame, ConfiguredSaOverridesContext);
     FW_RBT_DEFINE_RULE(CcsdsSdlsFramerTester, Frame, ParameterSa);
     FW_RBT_DEFINE_RULE(CcsdsSdlsFramerTester, Frame, EncryptFailure);
 

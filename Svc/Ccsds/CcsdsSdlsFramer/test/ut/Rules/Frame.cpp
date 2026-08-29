@@ -16,22 +16,18 @@ namespace Svc {
 namespace Ccsds {
 
 // ----------------------------------------------------------------------
-// Frame.ContextSa
+// Frame.ConfiguredSaOverridesContext
 // ----------------------------------------------------------------------
 
-bool CcsdsSdlsFramerTester::Frame__ContextSa__precondition() const {
+bool CcsdsSdlsFramerTester::Frame__ConfiguredSaOverridesContext__precondition() const {
     return true;
 }
 
-void CcsdsSdlsFramerTester::Frame__ContextSa__action() {
+void CcsdsSdlsFramerTester::Frame__ConfiguredSaOverridesContext__action() {
     this->clearHistory();
 
-    // Pick an SA index distinct from the unset sentinel and set it in the context
-    const U16 unsetSaIndex = ComCfg::FrameContext().get_saIndex();
-    U16 sa = static_cast<U16>(STest::Pick::lowerUpper(0, 0xFFFF));
-    if (sa == unsetSaIndex) {
-        sa = static_cast<U16>(sa - 1);
-    }
+    // Set a context SA that differs from the configured downlink SA.
+    U16 sa = static_cast<U16>(TEST_PARAM_SA_INDEX + 1);
     U8 storage[TEST_BUFFER_SIZE];
     Fw::Buffer buffer(storage, static_cast<Fw::Buffer::SizeType>(STest::Pick::lowerUpper(1, TEST_BUFFER_SIZE)));
     ComCfg::FrameContext context;
@@ -39,11 +35,11 @@ void CcsdsSdlsFramerTester::Frame__ContextSa__action() {
 
     this->invoke_to_dataIn(0, buffer, context);
 
-    // The context's SA index must reach the encryption helper
+    // The configured SA must override the context value for downlink encryption.
     ASSERT_from_encryptOut_SIZE(1);
     const FromPortEntry_encryptOut& entry = this->fromPortHistory_encryptOut->at(0);
-    ASSERT_EQ(entry.securityAssociationIndex, sa);
-    ASSERT_EQ(entry.context.get_saIndex(), sa);
+    ASSERT_EQ(entry.securityAssociationIndex, TEST_PARAM_SA_INDEX);
+    ASSERT_EQ(entry.context.get_saIndex(), TEST_PARAM_SA_INDEX);
 
     // Nominal path: no events, no direct data return
     ASSERT_EVENTS_SIZE(0);
@@ -61,7 +57,7 @@ bool CcsdsSdlsFramerTester::Frame__ParameterSa__precondition() const {
 void CcsdsSdlsFramerTester::Frame__ParameterSa__action() {
     this->clearHistory();
 
-    // An unset (default) context SA index must fall back to the SA_INDEX parameter
+    // An unset (default) context SA index uses the authoritative SA_INDEX parameter
     U8 storage[TEST_BUFFER_SIZE];
     Fw::Buffer buffer(storage, static_cast<Fw::Buffer::SizeType>(STest::Pick::lowerUpper(1, TEST_BUFFER_SIZE)));
     ComCfg::FrameContext context;

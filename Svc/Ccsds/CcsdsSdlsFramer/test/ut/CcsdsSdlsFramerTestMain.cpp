@@ -12,21 +12,19 @@
 
 using Svc::Ccsds::CcsdsSdlsFramerTester;
 
-// Verify dataIn selects the SA index from the context and forwards data to
-// the encryption helper.
-TEST(CcsdsSdlsFramer, FrameContextSa) {
-    COMMENT("Select the SA index from the frame context and forward data to the encryption helper.");
+// Verify the configured SA index overrides a context-carried SA value.
+TEST(CcsdsSdlsFramer, ConfiguredSaOverridesContext) {
+    COMMENT("Use the configured downlink SA index even when the frame context carries a different SA.");
     REQUIREMENT("SVC-CCSDS-SDLS-FRAMER-001");
     REQUIREMENT("SVC-CCSDS-SDLS-FRAMER-002");
     CcsdsSdlsFramerTester tester;
-    CcsdsSdlsFramerTester::Frame__ContextSa rule;
+    CcsdsSdlsFramerTester::Frame__ConfiguredSaOverridesContext rule;
     rule.apply(tester);
 }
 
-// Verify dataIn falls back to the SA_INDEX parameter when the context does
-// not specify an SA index.
+// Verify dataIn uses the SA_INDEX parameter when the context does not specify an SA index.
 TEST(CcsdsSdlsFramer, FrameParameterSa) {
-    COMMENT("Fall back to the SA_INDEX parameter when the frame context does not specify an SA index.");
+    COMMENT("Use the authoritative SA_INDEX parameter when the frame context does not specify an SA index.");
     REQUIREMENT("SVC-CCSDS-SDLS-FRAMER-001");
     REQUIREMENT("SVC-CCSDS-SDLS-FRAMER-002");
     CcsdsSdlsFramerTester tester;
@@ -92,7 +90,7 @@ TEST(CcsdsSdlsFramer, RandomizedTesting) {
     REQUIREMENT("SVC-CCSDS-SDLS-FRAMER-008");
     const U32 numRulesToApply = 10000;
     CcsdsSdlsFramerTester tester;
-    CcsdsSdlsFramerTester::Frame__ContextSa ruleContextSa;
+    CcsdsSdlsFramerTester::Frame__ConfiguredSaOverridesContext ruleConfiguredSa;
     CcsdsSdlsFramerTester::Frame__ParameterSa ruleParameterSa;
     CcsdsSdlsFramerTester::Frame__EncryptFailure ruleFailure;
     CcsdsSdlsFramerTester::DataFlow__EncryptedData ruleData;
@@ -102,8 +100,8 @@ TEST(CcsdsSdlsFramer, RandomizedTesting) {
     CcsdsSdlsFramerTester::DataFlow__ComStatus ruleComStatus;
 
     STest::Rule<CcsdsSdlsFramerTester>* rules[] = {
-        &ruleContextSa,  &ruleParameterSa, &ruleFailure,      &ruleData,
-        &ruleAllocation, &ruleReturn,      &ruleBufferReturn, &ruleComStatus,
+        &ruleConfiguredSa, &ruleParameterSa, &ruleFailure,      &ruleData,
+        &ruleAllocation,   &ruleReturn,      &ruleBufferReturn, &ruleComStatus,
     };
     STest::RandomScenario<CcsdsSdlsFramerTester> randomScenario("RandomScenario", rules, FW_NUM_ARRAY_ELEMENTS(rules));
     STest::BoundedScenario<CcsdsSdlsFramerTester> boundedScenario("BoundedScenario", randomScenario, numRulesToApply);
