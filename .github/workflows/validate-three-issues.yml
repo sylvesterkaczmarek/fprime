@@ -1,0 +1,86 @@
+name: Validate three F Prime fixes
+on:
+  push:
+    branches: [validation/fprime-three-20260925]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  component:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - issue: "5900"
+            sha: 256a910d987632c8fc4fef064151f3d19128ddd9
+            module: Svc/CmdSequencer
+            target: Svc_CmdSequencer_ut_exe
+            source: Svc/CmdSequencer/Sequence.cpp
+            regression: BufferAllocation.*
+          - issue: "5896"
+            sha: e84fe1bf7556087a36ac250b2acad28d40638c3b
+            module: Svc/Ccsds/CcsdsSdlsFramer
+            target: Svc_Ccsds_CcsdsSdlsFramer_ut_exe
+            source: Svc/Ccsds/CcsdsSdlsFramer/CcsdsSdlsFramer.fpp
+            regression: CcsdsSdlsFramer.IndependentFailureEventLimits
+          - issue: "5887"
+            sha: d0f0aa304cbe6072530dafcc75780456a2f7ae33
+            module: Svc/Ccsds/AosDeframer
+            target: Svc_Ccsds_AosDeframer_ut_exe
+            source: Svc/Ccsds/AosDeframer/AosDeframer.cpp
+            regression: AosDeframer.testEppConformantAdjacentLengths
+    env:
+      MODULE: ${{ matrix.module }}
+      TARGET: ${{ matrix.target }}
+      SOURCE: ${{ matrix.source }}
+      REGRESSION: ${{ matrix.regression }}
+      FIX_SHA: ${{ matrix.sha }}
+      BASE_SHA: 0d4156ef9d685f2357008f1cbcf34bd3b3c10ecd
+      BUILD: build-fprime-automatic-native-ut
+    steps:
+      - name: Check out the exact submitted commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ matrix.sha }}
+          fetch-depth: 2
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install the repository requirements
+        run: python -m pip install -r requirements.txt
+      - name: Build and test the submitted fix
+        shell: bash
+        run: |
+          mkdir -p validation-logs
+          fprime-util generate --ut -DFPRIME_ENABLE_AUTOCODER_UTS=OFF 2>&1 | tee validation-logs/generate.log
+          cmake --build "$BUILD" --target "$TARGET" -j4 2>&1 | tee validation-logs/build.log
+          ctest --test-dir "$BUILD/F-Prime/$MODULE" --no-tests=error -V 2>&1 | tee validation-logs/fixed.log
+      - name: Verify the regression detects the upstream implementation
+        shell: bash
+        run: |
+          git show "$BASE_SHA:$SOURCE" > "$SOURCE"
+          cmake --build "$BUILD" --target "$TARGET" -j4 2>&1 | tee validation-logs/baseline-build.log
+          set +e
+          GTEST_FILTER="$REGRESSION" ctest --test-dir "$BUILD/F-Prime/$MODULE" --no-tests=error -V > validation-logs/baseline-regression.log 2>&1
+          result=$?
+          set -e
+          cat validation-logs/baseline-regression.log
+          if [ "$result" -eq 0 ]; then
+            echo 'The expected regression failure was not observed.'
+            exit 1
+          fi
+          git restore --source "$FIX_SHA" -- "$SOURCE"
+          cmake --build "$BUILD" --target "$TARGET" -j4 2>&1 | tee validation-logs/restored-build.log
+          ctest --test-dir "$BUILD/F-Prime/$MODULE" --no-tests=error -V 2>&1 | tee validation-logs/restored-fixed.log
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: fprime-${{ matrix.issue }}-${{ matrix.sha }}
+          path: validation-logs/
+          retention-days: 30
